@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package discovery.service.v1;
+
+option go_package = "api";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+service Discovery {
+    rpc Register(RegSvcReqs) returns (RegSvcResp);
+    rpc Services(.google.protobuf.Empty) returns (LstSvcResp);
+    rpc Service(IdenSvcReqs) returns (GetSvcResp);
+    rpc Cancel(IdenSvcReqs) returns (.google.protobuf.Empty);
+    rpc AddRoutes(AddRoutesReqs) returns (AddRoutesResp);
+    rpc AddRoute(AddRouteReqs) returns (Route);
+}
+
+message RegSvcReqs {
+    string appID = 1;
+    repeated string urls = 2;
+}
+
+message RegSvcResp {
+    string kongID = 1;
+}
+
+message LstSvcResp {
+    repeated string appIDs = 1;
+}
+
+message GetSvcResp {
+    repeated string addrs = 1;
+}
+
+message IdenSvcReqs {
+    string appID = 1;
+}
+
+message AddRoutesReqs {
+    string serviceID = 1;
+    bytes paths = 2; // 对应由Protoc生成的swagger.json文件的paths字段
+}
+
+message AddRouteReqs {
+    string serviceID = 1;
+    Route route = 2;
+}
+
+message Route {
+    string id = 1;
+    string name = 2;
+    string path = 3;
+    string method = 4;
+}
+
+message AddRoutesResp {
+    repeated Route routes = 1;
+}

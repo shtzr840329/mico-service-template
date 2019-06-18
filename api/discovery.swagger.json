@@ -1,0 +1,20 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "api/discovery.proto",
+        "version": "1"
+    },
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "consumes": [
+        "application/json",
+        "multipart/form-data"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "paths": {},
+    "definitions": {}
+}
