@@ -1,17 +1,17 @@
 syntax = "proto3";
 
-package discovery.service.v1;
+package register.service.v1;
 
 option go_package = "api";
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 
-service Discovery {
-    rpc Register(RegSvcReqs) returns (RegSvcResp);
-    rpc Services(.google.protobuf.Empty) returns (LstSvcResp);
-    rpc Service(IdenSvcReqs) returns (GetSvcResp);
+service Register {
+    rpc RegAsGRPC(RegSvcReqs) returns (.google.protobuf.Empty);
+    rpc RegAsHTTP(RegSvcReqs) returns (RegSvcResp);
     rpc Cancel(IdenSvcReqs) returns (.google.protobuf.Empty);
+    // 添加路由只针对HTTP服务
     rpc AddRoutes(AddRoutesReqs) returns (AddRoutesResp);
     rpc AddRoute(AddRouteReqs) returns (Route);
 }
@@ -23,14 +23,6 @@ message RegSvcReqs {
 
 message RegSvcResp {
     string kongID = 1;
-}
-
-message LstSvcResp {
-    repeated string appIDs = 1;
-}
-
-message GetSvcResp {
-    repeated string addrs = 1;
 }
 
 message IdenSvcReqs {

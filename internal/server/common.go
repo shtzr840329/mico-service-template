@@ -9,7 +9,7 @@ import (
 
 func DiscoveryService() (pb.DiscoveryClient, error) {
 	cli := warden.NewClient(nil)
-	conn, err := cli.Dial(context.Background(), "discovery://default/discovery.service")
+	conn, err := cli.Dial(context.Background(), "discovery://default/register.service")
 	if err != nil {
 		return nil, fmt.Errorf("Register center is unready: %v\n", err)
 	}
