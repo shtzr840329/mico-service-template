@@ -1,13 +1,15 @@
 package grpc
 
 import (
-	pb "template/api"
-	"template/internal/service"
-	"github.com/bilibili/kratos/pkg/conf/paladin"
-	"github.com/bilibili/kratos/pkg/net/rpc/warden"
-	"template/internal/server"
 	"context"
 	"fmt"
+	"strings"
+	pb "template/api"
+	"template/internal/server"
+	"template/internal/service"
+
+	"github.com/bilibili/kratos/pkg/conf/paladin"
+	"github.com/bilibili/kratos/pkg/net/rpc/warden"
 )
 
 // New new a grpc server.
@@ -22,7 +24,9 @@ func New(svc *service.Service) *warden.Server {
 	}
 	ws := warden.NewServer(rc.Server)
 	pb.RegisterDemoServer(ws.Server(), svc)
-	RegisterGRPCService("demo.service", []string{rc.Server.Addr})
+	RegisterGRPCService(svc.AppID(), []string{
+		strings.Replace(rc.Server.Addr, "0.0.0.0", "127.0.0.1", 1),
+	})
 	ws, err := ws.Start()
 	if err != nil {
 		panic(err)
@@ -31,11 +35,11 @@ func New(svc *service.Service) *warden.Server {
 }
 
 func RegisterGRPCService(appID string, addrs []string) {
-	if cli, err := server.DiscoveryService(); err != nil {
+	if cli, err := server.RegisterService(); err != nil {
 		panic(err)
-	} else if resp, err := cli.Register(context.Background(), &pb.RegSvcReqs{
+	} else if resp, err := cli.RegAsGRPC(context.Background(), &pb.RegSvcReqs{
 		AppID: appID,
-		Urls: addrs,
+		Urls:  addrs,
 	}); err != nil {
 		panic(err)
 	} else {

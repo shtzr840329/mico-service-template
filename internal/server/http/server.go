@@ -2,17 +2,19 @@ package http
 
 import (
 	"net/http"
+	"strings"
 
 	pb "template/api"
 	"template/internal/model"
 	"template/internal/service"
 
+	"context"
+	"template/internal/server"
+	"template/internal/utils"
+
 	"github.com/bilibili/kratos/pkg/conf/paladin"
 	"github.com/bilibili/kratos/pkg/log"
 	bm "github.com/bilibili/kratos/pkg/net/http/blademaster"
-	"template/internal/server"
-	"template/internal/utils"
-	"context"
 )
 
 var (
@@ -34,7 +36,9 @@ func New(s *service.Service) (engine *bm.Engine) {
 	svc = s
 	engine = bm.DefaultServer(hc.Server)
 	pb.RegisterDemoBMServer(engine, svc)
-	RegisterHTTPService()
+	RegisterHTTPService(svc.AppID(), []string{
+		strings.Replace(hc.Server.Addr, "0.0.0.0", "127.0.0.1", 1),
+	})
 	initRouter(engine)
 	if err := engine.Start(); err != nil {
 		panic(err)
@@ -42,14 +46,21 @@ func New(s *service.Service) (engine *bm.Engine) {
 	return
 }
 
-func RegisterHTTPService() {
-	if dsSvc, err := server.DiscoveryService(); err != nil {
+func RegisterHTTPService(appID string, addrs []string) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	swaggerPath := "/Users/zhaojiachen/Projects/template/api/api.swagger.json"
+	if cli, err := server.RegisterService(); err != nil {
 		log.Error("Fetch discovery service error: %v", err)
-	} else if data, err := utils.PickPathsFromSwaggerJSON("/Users/zhaojiachen/Projects/template/api/api.swagger.json"); err != nil {
+	} else if _, err := cli.RegAsHTTP(ctx, &pb.RegSvcReqs{
+		AppID: appID,
+		Urls:  addrs,
+	}); err != nil {
+	} else if data, err := utils.PickPathsFromSwaggerJSON(swaggerPath); err != nil {
 		log.Error("API swagger file open failed: %v", err)
-	} else if _, err := dsSvc.AddRoutes(context.Background(), &pb.AddRoutesReqs{
-		ServiceID: "discovery.service",
-		Paths: data,
+	} else if _, err := cli.AddRoutes(ctx, &pb.AddRoutesReqs{
+		ServiceID: appID,
+		Paths:     data,
 	}); err != nil {
 		panic(err)
 	}
@@ -77,4 +88,3 @@ func howToStart(c *bm.Context) {
 	}
 	c.JSON(k, nil)
 }
-

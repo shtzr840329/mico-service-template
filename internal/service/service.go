@@ -6,10 +6,12 @@ import (
 
 	pb "template/api"
 	"template/internal/dao"
+
 	"github.com/bilibili/kratos/pkg/conf/paladin"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"template/internal/server"
+
+	"github.com/golang/protobuf/ptypes/empty"
 )
 
 // Service service.
@@ -29,6 +31,11 @@ func New() (s *Service) {
 		dao: dao.New(),
 	}
 	return s
+}
+
+func (s *Service) AppID() string {
+	appID, _ := s.ac.Get("appID").String()
+	return appID
 }
 
 // SayHello grpc demo func.
@@ -56,11 +63,9 @@ func (s *Service) Ping(ctx context.Context) (err error) {
 func (s *Service) Close() {
 	s.dao.Close()
 	// 注销服务
-	if cli, err := server.DiscoveryService(); err != nil {
+	if cli, err := server.RegisterService(); err != nil {
 		panic(err)
-	} else if _, err := cli.Cancel(context.Background(), &pb.IdenSvcReqs{
-		AppID: "demo.service",
-	}); err != nil {
+	} else if _, err := cli.Cancel(context.Background(), &pb.IdenSvcReqs{AppID: s.AppID()}); err != nil {
 		panic(err)
 	}
 }
