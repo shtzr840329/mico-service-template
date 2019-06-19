@@ -38,6 +38,11 @@ func (s *Service) AppID() string {
 	return appID
 }
 
+func (s *Service) SwaggerFile() string {
+	swagger, _ := s.ac.Get("swaggerFile").String()
+	return swagger
+}
+
 // SayHello grpc demo func.
 func (s *Service) SayHello(ctx context.Context, req *pb.HelloReq) (reply *empty.Empty, err error) {
 	reply = new(empty.Empty)

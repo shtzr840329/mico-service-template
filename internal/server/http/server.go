@@ -36,41 +36,32 @@ func New(s *service.Service) (engine *bm.Engine) {
 	svc = s
 	engine = bm.DefaultServer(hc.Server)
 	pb.RegisterDemoBMServer(engine, svc)
-	RegisterHTTPService(svc.AppID(), []string{
+	RegisterHTTPService(svc, []string{
 		strings.Replace(hc.Server.Addr, "0.0.0.0", "127.0.0.1", 1),
 	})
-	initRouter(engine)
 	if err := engine.Start(); err != nil {
 		panic(err)
 	}
 	return
 }
 
-func RegisterHTTPService(appID string, addrs []string) {
+func RegisterHTTPService(svc *service.Service, addrs []string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	swaggerPath := "/Users/zhaojiachen/Projects/template/api/api.swagger.json"
+	appID := svc.AppID()
 	if cli, err := server.RegisterService(); err != nil {
 		log.Error("Fetch discovery service error: %v", err)
 	} else if _, err := cli.RegAsHTTP(ctx, &pb.RegSvcReqs{
 		AppID: appID,
 		Urls:  addrs,
 	}); err != nil {
-	} else if data, err := utils.PickPathsFromSwaggerJSON(swaggerPath); err != nil {
+	} else if data, err := utils.PickPathsFromSwaggerJSON(svc.SwaggerFile()); err != nil {
 		log.Error("API swagger file open failed: %v", err)
 	} else if _, err := cli.AddRoutes(ctx, &pb.AddRoutesReqs{
 		ServiceID: appID,
 		Paths:     data,
 	}); err != nil {
 		panic(err)
-	}
-}
-
-func initRouter(e *bm.Engine) {
-	e.Ping(ping)
-	g := e.Group("/template")
-	{
-		g.GET("/start", howToStart)
 	}
 }
 
